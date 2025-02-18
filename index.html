@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งตำแหน่ง</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        #location {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>แจ้งตำแหน่ง</h1>
+
+    <label for="firstName">ชื่อ:</label>
+    <input type="text" id="firstName" placeholder="กรอกชื่อ">
+
+    <label for="lastName">นามสกุล:</label>
+    <input type="text" id="lastName" placeholder="กรอกนามสกุล">
+
+    <label for="disease">โรคประจำตัว:</label>
+    <input type="text" id="disease" placeholder="กรอกโรคประจำตัว">
+
+    <button onclick="getLocation()">เช็คตำแหน่ง</button>
+
+    <div id="location"></div>
+
+    <button onclick="sendData()">แจ้งตำแหน่ง</button>
+
+    <script>
+        let latitude, longitude;
+
+        // Function to get current location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+            document.getElementById("location").innerHTML = `Latitude: ${latitude}, Longitude: ${longitude}`;
+        }
+
+        // Function to send data to Google Sheets
+        function sendData() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const disease = document.getElementById('disease').value;
+
+            if (!firstName || !lastName || !disease || !latitude || !longitude) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วนและเช็คตำแหน่งก่อน");
+                return;
+            }
+
+            const url = 'https://script.google.com/macros/s/AKfycbwr3SbvTU70tQHm_zMmDlQr6DVj0C84MlMyUSH1yu2klHj9Gr8Wqzmm6QbVLUe-Mzwr/exec'; // Replace with your Google Apps Script URL
+            const data = {
+                firstName: firstName,
+                lastName: lastName,
+                disease: disease,
+                latitude: latitude,
+                longitude: longitude
+            };
+
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                alert("ข้อมูลถูกส่งเรียบร้อยแล้ว!");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+            });
+        }
+    </script>
+
+</body>
+</html>
