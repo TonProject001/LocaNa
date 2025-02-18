@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,96 +7,99 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            text-align: center;
             margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h2 {
+            color: #333;
         }
         input, button {
-            margin: 10px 0;
+            width: 80%;
             padding: 10px;
-            width: 100%;
-            max-width: 300px;
+            margin: 10px;
+            font-size: 16px;
         }
-        #location {
-            color: green;
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .loader {
+            display: none;
+            margin: 10px auto;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
-</head>
-<body>
-
-    <h1>แจ้งตำแหน่ง</h1>
-
-    <label for="firstName">ชื่อ:</label>
-    <input type="text" id="firstName" placeholder="กรอกชื่อ">
-
-    <label for="lastName">นามสกุล:</label>
-    <input type="text" id="lastName" placeholder="กรอกนามสกุล">
-
-    <label for="disease">โรคประจำตัว:</label>
-    <input type="text" id="disease" placeholder="กรอกโรคประจำตัว">
-
-    <button onclick="getLocation()">เช็คตำแหน่ง</button>
-
-    <div id="location"></div>
-
-    <button onclick="sendData()">แจ้งตำแหน่ง</button>
-
     <script>
-        let latitude, longitude;
-
-        // Function to get current location
+        let latitude = "";
+        let longitude = "";
+        
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition);
+                document.getElementById("loader").style.display = "block";
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
             } else {
-                alert("Geolocation is not supported by this browser.");
+                alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
             }
         }
 
         function showPosition(position) {
+            document.getElementById("loader").style.display = "none";
             latitude = position.coords.latitude;
             longitude = position.coords.longitude;
-            document.getElementById("location").innerHTML = `Latitude: ${latitude}, Longitude: ${longitude}`;
+            document.getElementById("latitude").textContent = latitude;
+            document.getElementById("longitude").textContent = longitude;
         }
 
-        // Function to send data to Google Sheets
-function sendData() {
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const disease = document.getElementById('disease').value;
-
-    if (!firstName || !lastName || !disease || !latitude || !longitude) {
-        alert("กรุณากรอกข้อมูลให้ครบถ้วนและเช็คตำแหน่งก่อน");
-        return;
-    }
-
-    const url = 'https://script.google.com/macros/s/AKfycbxE3D1ZWJM4etZb9YkeKsTl34TV9sSckC1VuLh1BBURxDdWzNcTTQY41eZ6rszI15_p/exec'; // ใช้ URL ของคุณ
-    const data = {
-        firstName: firstName,
-        lastName: lastName,
-        disease: disease,
-        latitude: latitude,
-        longitude: longitude
-    };
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (response.ok) {
-            alert("ข้อมูลถูกส่งเรียบร้อยแล้ว!");
-        } else {
-            alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+        function showError(error) {
+            document.getElementById("loader").style.display = "none";
+            alert("เกิดข้อผิดพลาดในการระบุตำแหน่ง");
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
-    });
-}
+        
+        function sendData() {
+            let name = document.getElementById("name").value.trim();
+            let surname = document.getElementById("surname").value.trim();
+            let disease = document.getElementById("disease").value.trim();
+            
+            if (!name || !surname || !disease || !latitude || !longitude) {
+                alert("กรุณากรอกข้อมูลให้ครบและเช็คตำแหน่งก่อนแจ้ง");
+                return;
+            }
+            
+            let url = "https://script.google.com/macros/s/AKfycbySUWyP3E2TjM2M99UwXdwoArlRFzQIuT-Qp1iwvOMyMpT9kdb08dQBKHDFfV4wrobm/exec";
+            let params = `?name=${encodeURIComponent(name)}&surname=${encodeURIComponent(surname)}&disease=${encodeURIComponent(disease)}&lat=${latitude}&lng=${longitude}`;
+            
+            fetch(url + params)
+                .then(response => response.text())
+                .then(data => alert("✅ ส่งข้อมูลเรียบร้อยแล้ว!"))
+                .catch(error => alert("❌ เกิดข้อผิดพลาดในการส่งข้อมูล"));
+        }
     </script>
-
+</head>
+<body>
+    <h2>แจ้งตำแหน่ง</h2>
+    <label>ชื่อ: <input type="text" id="name"></label><br>
+    <label>นามสกุล: <input type="text" id="surname"></label><br>
+    <label>โรคประจำตัว: <input type="text" id="disease"></label><br>
+    <button onclick="getLocation()">📍 เช็คตำแหน่ง</button>
+    <div class="loader" id="loader"></div>
+    <p>ละติจูด: <span id="latitude"></span></p>
+    <p>ลองจิจูด: <span id="longitude"></span></p>
+    <button onclick="sendData()">🚀 แจ้งตำแหน่ง</button>
 </body>
 </html>
